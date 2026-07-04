@@ -4,10 +4,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from RetailApp.database import get_db
-from RetailApp.dependencies import get_current_admin, get_current_customer
+from RetailApp.dependencies import get_current_admin
 from RetailApp.models import Customer as CustomerTable
-from RetailApp.routes.services import find_customer, get_orders
-from RetailApp.schemas import Customer, CustomerOut, Order
+from RetailApp.routes.services import find_customer
+from RetailApp.schemas import Customer, CustomerOut
 
 router = APIRouter()
 

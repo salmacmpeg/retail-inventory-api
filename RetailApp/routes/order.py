@@ -63,14 +63,11 @@ async def add_order(
             )
 
         created_at = datetime.now(timezone.utc)
-        statement = (
-            insert(OrderTable)
-            .values(
-                customer_id=customer_id,
-                order_total=order_total,
-                status=order_data.status,
-                created_at=created_at,
-            )
+        statement = insert(OrderTable).values(
+            customer_id=customer_id,
+            order_total=order_total,
+            status=order_data.status,
+            created_at=created_at,
         )
         logger.debug("Executing database insert for new order")
         result = await db.execute(statement)

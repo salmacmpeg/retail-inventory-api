@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.post("/product", response_model=Product, status_code=201)
-async def add_order(
+async def add_product(
     product: ProductIN, db: AsyncSession = Depends(get_db), current_admin: UserTable = Depends(get_current_admin)
 ):
     data = product.model_dump()
@@ -67,8 +67,8 @@ async def get_all_products(db: AsyncSession = Depends(get_db), current_customer:
 
 
 @router.get("/product/{id}", response_model=Product, status_code=201)
-async def get_order(
-    id: int, db: AsyncSession = Depends(get_db), current_customer: UserTable = Depends(get_current_customer)
+async def get_product(
+    id: int, db: AsyncSession = Depends(get_db), current_customer: UserTable = Depends(get_current_user)
 ):
     logger.debug(f"Fetching product details for ID: {id}")
 

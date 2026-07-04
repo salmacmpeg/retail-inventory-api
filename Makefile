@@ -11,7 +11,6 @@ lint:
 format:
 	isort RetailApp
 	ruff format RetailApp
-#ruff check --fix RetailApp
 	black RetailApp
 test:
 	pytest -v ./test --tb=long --showlocals

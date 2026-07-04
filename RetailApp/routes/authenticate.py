@@ -53,7 +53,7 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
         sql_query = select(UserTable).where(UserTable.id == new_user_id)
         result = await db.execute(sql_query)
         new_user = result.scalar_one()
-        
+
         logger.info(f"User created successfully: ID {new_user.id} | Email: {new_user.useremail}")
 
         if user.role == "customer":
@@ -65,9 +65,9 @@ async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
             }
             customer_query = insert(CustomerTable).values(**customer_data)
             customer_result = await db.execute(customer_query)
-            
+
             await db.commit()
-            
+
             new_customer_id = customer_result.lastrowid
             new_user.customer_id = new_customer_id
 

@@ -25,11 +25,11 @@ async def find_customer(customer_id: int, db: AsyncSession) -> CustomerOut | Non
 async def find_order(order_id: int, db: AsyncSession) -> Order | None:
     statement = select(OrderTable).options(joinedload(OrderTable.items)).where(OrderTable.id == order_id)
     result = await db.execute(statement)
-    order = result.scalar_one_or_none()
+    order = result.unique().scalar_one_or_none()
     return order
 
 
-async def find_product(product_id: int, db: AsyncSession) -> Order | None:
+async def find_product(product_id: int, db: AsyncSession) -> ProductTable | None:
     statement = select(ProductTable).where(ProductTable.id == product_id)
     result = await db.execute(statement)
     product = result.scalar_one_or_none()

@@ -133,7 +133,7 @@ class status_choice(str, Enum):
 
 class OrderIN(BaseConfig):
     status: status_choice
-    cart_items: list[OrderItemIn] = Field(..., min_items=1, description="List of items in the cart")
+    cart_items: list[OrderItemIn] = Field(..., min_length=1, description="List of items in the cart")
 
 
 class Order(OrderIN):

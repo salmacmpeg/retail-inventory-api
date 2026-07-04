@@ -14,7 +14,8 @@ from RetailApp.database import Base, engine
 from RetailApp.routes.authenticate import router as auth_router
 from RetailApp.routes.customer import router as customer_router
 from RetailApp.routes.order import router as order_router
-from RetailApp.routes.pricer import load_ml_assets, router as pricer_router
+from RetailApp.routes.pricer import load_ml_assets
+from RetailApp.routes.pricer import router as pricer_router
 from RetailApp.routes.product import router as products_router
 from RetailApp.routes.users import router as users_router
 

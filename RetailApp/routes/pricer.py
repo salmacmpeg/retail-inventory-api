@@ -1,5 +1,4 @@
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 
 import joblib
@@ -44,7 +43,7 @@ def load_ml_assets():
     # Load the pipeline model binary safely
     model = joblib.load(model_file_path)
 
-    return model, category_anchors  
+    return model, category_anchors
 
 
 @router.post("/suggest_pricer", response_model=PriceSuggestionResponse, status_code=201)
@@ -54,13 +53,13 @@ async def add_order(
     db: AsyncSession = Depends(get_db),
     current_admin: UserTable = Depends(get_current_admin),
 ):
-    
+
     model_pipeline = request.app.state.ml_model
     category_anchors = request.app.state.category_anchors
 
     if model_pipeline is None:
         return PriceSuggestionResponse(suggested_price=49.99)
-    
+
     category_value = payload.category.value if hasattr(payload.category, "value") else payload.category
     category_avg_price = category_anchors.get(category_value, 45.00)
 

@@ -20,11 +20,11 @@ jobs:
       - name: Install dependencies
         run: make install
 
-      - name: Check formatting
-        run: ruff format --check RetailApp
-
       - name: Lint
         run: make lint
+
+      - name: Format
+        run: make format
 
       - name: Run tests
         run: make test

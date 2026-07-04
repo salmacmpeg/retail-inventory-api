@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import os
 
 from loguru import logger
@@ -13,6 +14,11 @@ from RetailApp.core.config import config as app_config  # noqa: E402
 from RetailApp.database import Base, get_db  # noqa: E402
 from RetailApp.main import app  # noqa: E402
 
+from sqlalchemy import insert
+
+from RetailApp.models import Product as ProductTable
+from RetailApp.main import app
+from RetailApp.routes.pricer import load_ml_assets
 
 # This runs at the very start of the test session
 def pytest_configure(config):
@@ -111,3 +117,74 @@ async def authenticated_admin_token(client: AsyncClient, create_user_admin):
     response = await client.post("/login", json=login_data)
     tokens = response.json()
     return {"Authorization": f"Bearer {tokens['access_token']}"}
+
+
+@pytest_asyncio.fixture
+async def sample_products(db_session: AsyncSession):
+    """
+    A factory fixture to generate sample products directly in the test database.
+    Accepts a list of dictionaries with overriding fields.
+    """
+    created_products = []
+
+    async def _create_products(custom_products_list: list[dict] = None):
+        # Default fallback product data if none provided
+        if not custom_products_list:
+            custom_products_list = [
+                {
+                    "name": "Test Laptop",
+                    "category": "Electronics",
+                    "cost_price": 500.0,
+                    "current_price": 999.99,
+                    "inventory_level": 10,
+                }
+            ]
+
+        for index, prod_data in enumerate(custom_products_list):
+            now_utc = datetime.now(timezone.utc)
+            file_suffix = f"{now_utc.strftime('%y%m%d_%H%M%S')}_{index}"
+            sku = f"{prod_data['name']}_{prod_data['category']}_{file_suffix}"
+     
+            # Combine default fields with custom overrides
+            final_data = {
+                "name": prod_data.get("name", f"Generic Item {index}"),
+                "category": prod_data.get("category", "Electronics"),
+                "cost_price": prod_data.get("cost_price", 10.0),
+                "current_price": prod_data.get("current_price", 20.0),
+                "inventory_level": prod_data.get("inventory_level", 5),
+                "sku": sku
+            }
+
+            statement = insert(ProductTable).values(**final_data)
+            result = await db_session.execute(statement)
+            final_data["id"] = result.lastrowid
+            created_products.append(final_data)
+        
+        await db_session.commit()
+        return created_products
+
+    return _create_products
+
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+def initialize_test_ml_assets():
+    """
+    Runs once per test session. Loads real ML assets and binds them 
+    to app.state just like main.py does at startup.
+    """
+    try:
+        logger.info("--- Loading Real ML Assets for Test Session ---")
+        model, anchors = load_ml_assets()
+        app.state.ml_model = model
+        app.state.category_anchors = anchors
+    except Exception as e:
+        logger.error(f"Failed to load ML assets for tests: {e}")
+        # Optional: Set to None so tests hit fallback instead of crashing completely
+        app.state.ml_model = None
+        app.state.category_anchors = {}
+        
+    yield
+    
+    # Clean up app state after all tests finish running
+    app.state.ml_model = None
+    app.state.category_anchors = {}
