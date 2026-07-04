@@ -27,4 +27,16 @@ jobs:
         run: make format
 
       - name: Run tests
+        env:
+          ENV_STATE: TEST
+          SECRET_KEY: ${{secrets.SECRET_KEY}}
+          ML_PRICER_MODEL_PATH : ./PricerMlModel/models/price_model.pkl
+          ML_PRICER_RAW_DATA_PATH : ./PricerMlModel/data/raw/retail_price.csv
+          ML_PRICER_TRAIN_DATA_PATH : ./PricerMlModel/data/preprocessed/train.csv
+          ML_PRICER_TEST_DATA_PATH : ./PricerMlModel/data/preprocessed/test.csv
+          ML_PRICER_MODEL_VERSION : "V1"
+          ML_PRICER_METRICS_PATH : ./PricerMlModel/reports/metrics.json 
+          ALGORITHM: "HS256"
+          ACCESS_TOKEN_EXPIRE_MINUTES: 30
+          REFRESH_TOKEN_EXPIRE_DAYS: 7
         run: make test
