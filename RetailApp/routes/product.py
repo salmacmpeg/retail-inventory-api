@@ -6,7 +6,7 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from RetailApp.database import get_db
-from RetailApp.dependencies import get_current_admin, get_current_customer, get_current_user
+from RetailApp.dependencies import get_current_admin, get_current_user
 from RetailApp.models import Product as ProductTable
 from RetailApp.models import User as UserTable
 from RetailApp.routes.services import find_product, get_products
