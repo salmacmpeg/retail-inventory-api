@@ -14,9 +14,10 @@ format:
 	black RetailApp
 test:
 	pytest -v ./test --tb=long --showlocals
-report:
-	pytest --html=report.html --self-contained-html test
-	pytest --cov=RetailApp --cov-report=html test
+test-report:
+	pytest -v ./test --tb=long --showlocals --cov=RetailApp --cov-report=term-missing --cov-report=xml
+# 	pytest --html=report.html --self-contained-html test
+# 	pytest --cov=RetailApp --cov-report=html test
 all: format run
 
 

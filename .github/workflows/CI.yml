@@ -39,4 +39,24 @@ jobs:
           ALGORITHM: "HS256"
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
           REFRESH_TOKEN_EXPIRE_DAYS: 7
-        run: make test
+        run: make test-report
+
+      - name: Generate Coverage Report Summary
+        if: always()
+        run: |
+          echo "### Code Coverage Results" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`text" >> $GITHUB_STEP_SUMMARY
+          coverage report -m >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      # 3. Create an optional HTML report to bundle up and download from the build artifacts panel
+      - name: Build HTML Coverage Report File
+        if: always()
+        run: coverage html
+
+      - name: Upload HTML Coverage Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-coverage-report
+          path: htmlcov/
