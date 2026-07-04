@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetailApp - Login</title>
+    <link rel="stylesheet" href="/frontend/css/auth.css">
+<base target="_blank">
+</head>
+<body>
+    <div class="auth-card">
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Sign in to your RetailApp account</p>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn">Sign In</button>
+            <div class="error" id="error"></div>
+            <div class="success" id="success"></div>
+        </form>
+        <div class="link">
+            Don't have an account? <a href="/frontend/pages/register.html">Sign up</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var errorEl = document.getElementById('error');
+            var successEl = document.getElementById('success');
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+
+            var email = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+
+            fetch(window.location.origin + '/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ useremail: email, password: password })
+            }).then(function(res) {
+                return res.json().then(function(data) {
+                    if (!res.ok) throw new Error(data.detail || 'Login failed');
+                    return data;
+                });
+            }).then(function(data) {
+                localStorage.setItem('access_token', data.access_token);
+                localStorage.setItem('refresh_token', data.refresh_token);
+
+                return fetch(window.location.origin + '/users/me', {
+                    headers: { 'Authorization': 'Bearer ' + data.access_token }
+                }).then(function(r) { return r.json(); });
+            }).then(function(me) {
+                localStorage.setItem('user', JSON.stringify(me));
+                successEl.textContent = 'Login successful! Redirecting...';
+                successEl.style.display = 'block';
+
+                setTimeout(function() {
+                    if (me.role === 'admin') {
+                        window.location.href = '/frontend/pages/admin.html';
+                    } else {
+                        window.location.href = '/frontend/pages/customer.html';
+                    }
+                }, 800);
+            }).catch(function(err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>

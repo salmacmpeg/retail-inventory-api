@@ -1,0 +1,47 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      db: 
+        condition: service_healthy
+
+    environment:
+      ENV_STATE : PROD
+      PROD_DATABASE_URL : mysql+aiomysql://retail_admin:1234@db:3306/retail_db
+      ALLOWED_ORIGINS: '["http://localhost:8000","http://0.0.0.0:8000"]'
+      SECRET_KEY: "a71c47b23aeb2b475157f9bbff1e677643ae315ae348487cb3b63e7cbcd391d7"
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      LOG_LEVEL: INFO
+      ML_PRICER_MODEL_PATH: ./PricerMlModel/models/price_model.pkl
+      ML_PRICER_MODEL_VERSION: V1
+      ML_PRICER_RAW_DATA_PATH: ./PricerMlModel/data/raw/data.csv
+      ML_PRICER_TRAIN_DATA_PATH: ./PricerMlModel/data/processed/train.csv
+      ML_PRICER_TEST_DATA_PATH: ./PricerMlModel/data/processed/test.csv
+      ML_PRICER_METRICS_PATH: ./PricerMlModel/reports/metrics.json
+      
+
+  db:
+    image: mysql:8.0
+    
+    environment:
+      MYSQL_ROOT_PASSWORD : password
+      MYSQL_DATABASE  : retail_db
+      MYSQL_USER      : retail_admin
+      MYSQL_PASSWORD  : 1234
+    
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

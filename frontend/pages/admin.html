@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetailApp - Admin Dashboard</title>
+    <link rel="stylesheet" href="/frontend/css/dashboard.css">
+<base target="_blank">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <h2>RetailApp Admin</h2>
+            <a class="nav-item active" data-section="dashboard"> Dashboard</a>
+            <a class="nav-item" data-section="products"> Products</a>
+            <a class="nav-item" data-section="orders"> Orders</a>
+            <a class="nav-item" data-section="customers">Customers</a>
+            <a class="nav-item" data-section="users"> Users</a>
+            <a class="nav-item" data-section="ml"> ML Price Suggester</a>
+            <a class="nav-item" id="logoutBtn"> Logout</a>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="user-info">
+                    <span id="adminName">Admin</span>
+                    <button class="btn btn-danger btn-sm" id="logoutBtn2">Logout</button>
+                </div>
+            </div>
+
+            <!-- DASHBOARD -->
+            <div id="dashboard" class="section">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="label">Total Products</div><div class="value" id="statProducts">-</div></div>
+                    <div class="stat-card"><div class="label">Total Orders</div><div class="value" id="statOrders">-</div></div>
+                    <div class="stat-card"><div class="label">Total Customers</div><div class="value" id="statCustomers">-</div></div>
+                    <div class="stat-card"><div class="label">Total Users</div><div class="value" id="statUsers">-</div></div>
+                </div>
+            </div>
+
+            <!-- PRODUCTS -->
+            <div id="products" class="section hidden">
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h3>All Products</h3>
+                        <button class="btn btn-primary" onclick="showModal('productModal')">+ Add Product</button>
+                    </div>
+                    <div id="productsTable"></div>
+                </div>
+            </div>
+
+            <!-- ORDERS -->
+            <div id="orders" class="section hidden">
+                <div class="card">
+                    <h3>All Orders</h3>
+                    <div id="ordersTable"></div>
+                </div>
+            </div>
+
+            <!-- CUSTOMERS -->
+            <div id="customers" class="section hidden">
+                <div class="card">
+                    <h3>All Customers</h3>
+                    <div id="customersTable"></div>
+                </div>
+            </div>
+
+            <!-- USERS -->
+            <div id="users" class="section hidden">
+                <div class="card">
+                    <h3>All Users</h3>
+                    <div id="usersTable"></div>
+                </div>
+            </div>
+
+            <!-- ML PRICE SUGGESTER -->
+            <div id="ml" class="section hidden">
+                <div class="card" style="max-width:500px;">
+                    <h3>ML Baseline Price Estimator</h3>
+                    <p style="color:#718096;font-size:13px;margin-bottom:16px;">
+                        Enter product category and inventory level to get an AI-suggested Baseline price.
+                    </p>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="mlCategory">
+                            <option value="Electronics">Electronics</option>
+                            <option value="Cloths">Cloths</option>
+                            <option value="Food">Food</option>
+                            <option value="bed_bath_table">Bed & Bath & Table</option>
+                            <option value="garden_tools">Garden Tools</option>
+                            <option value="consoles_games">Consoles & Games</option>
+                            <option value="health_beauty">Health & Beauty</option>
+                            <option value="cool_stuff">Cool Stuff</option>
+                            <option value="perfumery">Perfumery</option>
+                            <option value="computers_accessories">Computers & Accessories</option>
+                            <option value="watches_gifts">Watches & Gifts</option>
+                            <option value="furniture_decor">Furniture & Decor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Inventory Level</label>
+                        <input type="number" id="mlInventory" value="100" min="1">
+                    </div>
+                    <button class="btn btn-primary" onclick="runMLPrediction()">Get Price Suggestion</button>
+                    <div id="mlResult" style="margin-top:20px;padding:16px;background:#f7fafc;border-radius:8px;display:none;">
+                        <div style="font-size:12px;color:#718096;">Suggested Optimal Price</div>
+                        <div style="font-size:32px;font-weight:700;color:#667eea;" id="mlPrice">$0.00</div>
+                        <div style="font-size:11px;color:#a0aec0;margin-top:8px;"> Based on category benchmarks. Use as a starting reference only. </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal">
+            <h3>Add New Product</h3>
+            <div class="form-group"><label>Name</label><input type="text" id="prodName" placeholder="Product name"></div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="prodCategory">
+                    <option value="Electronics">Electronics</option>
+                    <option value="Cloths">Cloths</option>
+                    <option value="Food">Food</option>
+                    <option value="bed_bath_table">Bed & Bath & Table</option>
+                    <option value="garden_tools">Garden Tools</option>
+                    <option value="consoles_games">Consoles & Games</option>
+                    <option value="health_beauty">Health & Beauty</option>
+                    <option value="cool_stuff">Cool Stuff</option>
+                    <option value="perfumery">Perfumery</option>
+                    <option value="computers_accessories">Computers & Accessories</option>
+                    <option value="watches_gifts">Watches & Gifts</option>
+                    <option value="furniture_decor">Furniture & Decor</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Cost Price</label><input type="number" id="prodCost" step="0.01" placeholder="0.00"></div>
+            <div class="form-group"><label>Current Price</label><input type="number" id="prodPrice" step="0.01" placeholder="0.00"></div>
+            <div class="form-group"><label>Inventory Level</label><input type="number" id="prodInventory" value="10" min="1"></div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="addProduct()">Save</button>
+                <button class="btn" style="background:#e2e8f0;" onclick="hideModal('productModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="/frontend/js/dashboard.js"></script>
+    <script>
+        initDashboard({
+            role: 'admin',
+            sections: ['dashboard', 'products', 'orders', 'customers', 'users', 'ml'],
+            defaultSection: 'dashboard',
+            loadFns: {
+                dashboard: loadAdminDashboard,
+                products: loadProducts,
+                orders: loadOrders,
+                customers: loadCustomers,
+                users: loadUsers,
+                ml: function() {}
+            }
+        });
+
+        async function loadAdminDashboard() {
+            var products = await apiCall('/products').catch(function() { return []; });
+            var orders = await apiCall('/orders').catch(function() { return []; });
+            var customers = await apiCall('/customers').catch(function() { return []; });
+            var users = await apiCall('/users/list').catch(function() { return []; });
+            document.getElementById('statProducts').textContent = products.length;
+            document.getElementById('statOrders').textContent = orders.length;
+            document.getElementById('statCustomers').textContent = customers.length;
+            document.getElementById('statUsers').textContent = users.length;
+        }
+
+        async function loadProducts() {
+            var products = await apiCall('/products');
+            renderTable('productsTable', products, [
+                { key: 'id', label: 'ID' },
+                { key: 'name', label: 'Name' },
+                { key: 'sku', label: 'SKU' },
+                { key: 'category', label: 'Category' },
+                { key: 'cost_price', label: 'Cost', format: function(v) { return '$' + v.toFixed(2); } },
+                { key: 'current_price', label: 'Price', format: function(v) { return '$' + v.toFixed(2); } },
+                { key: 'inventory_level', label: 'Stock' }
+            ]);
+        }
+
+        async function loadOrders() {
+            var orders = await apiCall('/orders');
+            renderTable('ordersTable', orders, [
+                { key: 'id', label: 'ID' },
+                { key: 'customer_id', label: 'Customer ID' },
+                { key: 'order_total', label: 'Total', format: function(v) { return '$' + v.toFixed(2); } },
+                { key: 'status', label: 'Status', badge: true },
+                { key: 'created_at', label: 'Date', format: function(v) { return new Date(v).toLocaleDateString(); } }
+            ], { actions: [
+                { label: 'Pending', class: 'btn-sm', style: 'background:#fefcbf;color:#744210;', condition: function(row) { return row.status !== 'pending'; }, onClick: function(row) { updateOrderStatus(row.id, 'pending'); } },
+                { label: 'Shipped', class: 'btn-sm', style: 'background:#bee3f8;color:#2a4365;', condition: function(row) { return row.status !== 'shipped'; }, onClick: function(row) { updateOrderStatus(row.id, 'shipped'); } },
+                { label: 'Delivered', class: 'btn-sm', style: 'background:#c6f6d5;color:#22543d;', condition: function(row) { return row.status !== 'delivered'; }, onClick: function(row) { updateOrderStatus(row.id, 'delivered'); } }
+            ]});
+        }
+
+        async function loadCustomers() {
+            var customers = await apiCall('/customers');
+            renderTable('customersTable', customers, [
+                { key: 'id', label: 'ID' },
+                { key: 'name', label: 'Name' },
+                { key: 'email', label: 'Email' },
+                { key: 'phone', label: 'Phone' },
+                { key: 'user_id', label: 'User ID' }
+            ]);
+        }
+
+        async function loadUsers() {
+            var users = await apiCall('/users/list');
+            renderTable('usersTable', users, [
+                { key: 'id', label: 'ID' },
+                { key: 'username', label: 'Username' },
+                { key: 'useremail', label: 'Email' },
+                { key: 'role', label: 'Role', badge: true },
+                { key: 'is_active', label: 'Status', format: function(v) { return v ? 'Active' : 'Inactive'; }, badge: true }
+            ], { actions: [
+                { label: 'Deactivate', class: 'btn btn-danger btn-sm', condition: function(row) { return row.is_active; }, onClick: function(row) { toggleUser(row.id, 'deactivate'); } },
+                { label: 'Activate', class: 'btn btn-success btn-sm', condition: function(row) { return !row.is_active; }, onClick: function(row) { toggleUser(row.id, 'activate'); } }
+            ]});
+        }
+
+        async function addProduct() {
+            var body = {
+                name: document.getElementById('prodName').value,
+                category: document.getElementById('prodCategory').value,
+                cost_price: parseFloat(document.getElementById('prodCost').value),
+                current_price: parseFloat(document.getElementById('prodPrice').value),
+                inventory_level: parseInt(document.getElementById('prodInventory').value)
+            };
+            if (!body.name || isNaN(body.cost_price) || isNaN(body.current_price)) {
+                showToast('Please fill all fields correctly', 'error'); return;
+            }
+            await apiCall('/product', 'POST', body);
+            hideModal('productModal');
+            showToast('Product added successfully');
+            loadProducts();
+        }
+
+        async function updateOrderStatus(id, status) {
+            await apiCall('/order/' + id + '/status', 'PATCH', { new_status: status });
+            showToast('Order #' + id + ' marked as ' + status);
+            loadOrders();
+        }
+
+        async function toggleUser(id, action) {
+            await apiCall('/users/' + id + '/' + action, 'PUT');
+            showToast('User ' + action + 'd successfully');
+            loadUsers();
+        }
+
+        async function runMLPrediction() {
+            var body = {
+                category: document.getElementById('mlCategory').value,
+                inventory_level: parseInt(document.getElementById('mlInventory').value)
+            };
+            var result = await apiCall('/ml/suggest_pricer', 'POST', body);
+            document.getElementById('mlPrice').textContent = '$' + result.suggested_price.toFixed(2);
+            document.getElementById('mlResult').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

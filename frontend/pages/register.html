@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetailApp - Sign Up</title>
+    <link rel="stylesheet" href="/frontend/css/auth.css">
+<base target="_blank">
+</head>
+<body>
+    <div class="auth-card">
+        <h1>Create Account</h1>
+        <p class="subtitle">Get started with RetailApp</p>
+        <form id="registerForm">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" placeholder="johndoe" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="tel" id="phone" placeholder="+1 234 567 890" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select id="role" required>
+                    <option value="customer">Customer</option>
+                    <option value="employee">Employee</option>
+                    <option value="warehouse_manager">Warehouse Manager</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="btn">Create Account</button>
+            <div class="error" id="error"></div>
+            <div class="success" id="success"></div>
+        </form>
+        <div class="link">
+            Already have an account? <a href="/frontend/pages/login.html">Sign in</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var errorEl = document.getElementById('error');
+            var successEl = document.getElementById('success');
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+
+            var body = {
+                username: document.getElementById('username').value,
+                useremail: document.getElementById('email').value,
+                userphone: document.getElementById('phone').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value
+            };
+
+            fetch(window.location.origin + '/user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            }).then(function(res) {
+                return res.json().then(function(data) {
+                    if (!res.ok) throw new Error(data.detail || 'Registration failed');
+                    return data;
+                });
+            }).then(function() {
+                successEl.textContent = 'Account created! Redirecting to login...';
+                successEl.style.display = 'block';
+                setTimeout(function() {
+                    window.location.href = '/frontend/pages/login.html';
+                }, 1500);
+            }).catch(function(err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>

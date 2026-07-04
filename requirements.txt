@@ -1,0 +1,24 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+sqlalchemy [asyncio]
+aiosqlite
+python-dotenv
+pydantic-settings
+ruff
+black
+isort
+pytest 
+pytest-asyncio
+httpx
+loguru
+python-jose[cryptography]
+passlib[bcrypt]
+pytest-html
+pytest-cov
+pandas
+numpy
+joblib
+scikit-learn
+aiomysql
+cryptography

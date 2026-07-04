@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.env
+*.db
+logs/
+.venv/
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+.vscode/
+*logs/
+retailapp.egg-info/
+.coverage
+PricerMlModel/reports/
+RetailApp/db
+RetailApp/seed_data.py

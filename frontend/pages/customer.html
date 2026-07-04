@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetailApp - Customer Portal</title>
+    <link rel="stylesheet" href="/frontend/css/dashboard.css">
+<base target="_blank">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <h2>RetailApp</h2>
+            <a class="nav-item active" data-section="shop">Shop</a>
+            <a class="nav-item" data-section="orders"> My Orders</a>
+            <a class="nav-item" data-section="cart"> Cart <span id="cartBadge" style="background:#667eea;color:white;padding:2px 8px;border-radius:10px;font-size:11px;margin-left:4px;display:none;">0</span></a>
+            <a class="nav-item" id="logoutBtn">Logout</a>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <h1 id="pageTitle">Shop</h1>
+                <div class="user-info">
+                    <span id="customerName">Customer</span>
+                    <button class="btn btn-danger btn-sm" id="logoutBtn2">Logout</button>
+                </div>
+            </div>
+
+            <!-- SHOP -->
+            <div id="shop" class="section">
+                <div class="stats-grid" style="margin-bottom:16px;">
+                    <div class="stat-card"><div class="label">Available Products</div><div class="value" id="statAvailable">-</div></div>
+                    <div class="stat-card"><div class="label">Cart Items</div><div class="value" id="statCartItems">0</div></div>
+                    <div class="stat-card"><div class="label">Cart Total</div><div class="value" id="statCartTotal">$0.00</div></div>
+                </div>
+                <div id="productsGrid"></div>
+            </div>
+
+            <!-- MY ORDERS -->
+            <div id="orders" class="section hidden">
+                <div class="card">
+                    <h3>My Orders</h3>
+                    <div id="ordersTable"></div>
+                </div>
+            </div>
+
+            <!-- CART -->
+            <div id="cart" class="section hidden">
+                <div class="card">
+                    <h3>Shopping Cart</h3>
+                    <div id="cartItems"></div>
+                    <div class="cart-total">
+                        <span>Total</span>
+                        <span id="cartTotal">$0.00</span>
+                    </div>
+                    <button class="btn btn-success" style="width:100%;margin-top:8px;" onclick="placeOrder()">Place Order</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="/frontend/js/dashboard.js"></script>
+    <script>
+        var cart = [];
+
+        initDashboard({
+            role: 'customer',
+            sections: ['shop', 'orders', 'cart'],
+            defaultSection: 'shop',
+            loadFns: {
+                shop: loadShop,
+                orders: loadMyOrders,
+                cart: loadCart
+            }
+        });
+
+        async function loadShop() {
+            var products = await apiCall('/products');
+            document.getElementById('statAvailable').textContent = products.length;
+            updateCartStats();
+
+            var grid = document.getElementById('productsGrid');
+            if (!products.length) { grid.innerHTML = '<div class="empty">No products available</div>'; return; }
+
+            var html = '<div class="product-grid" id="productGridContainer">';
+            for (var i = 0; i < products.length; i++) {
+                var p = products[i];
+                var stockClass = p.inventory_level < 10 ? 'low' : '';
+                html += '<div class="product-card" data-product-id="' + p.id + '" data-product-name="' + encodeURIComponent(p.name) + '" data-product-price="' + p.current_price + '" data-product-stock="' + p.inventory_level + '">' +
+                    '<div class="name">' + p.name + '</div>' +
+                    '<div class="category">' + p.category + '</div>' +
+                    '<div class="price">$' + p.current_price.toFixed(2) + '</div>' +
+                    '<div class="stock ' + stockClass + '">' + p.inventory_level + ' in stock</div>' +
+                    '<div class="actions">' +
+                        '<input type="number" class="qty-input" data-product-id="' + p.id + '" value="1" min="1" max="' + p.inventory_level + '">' +
+                        '<button class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="' + p.id + '">Add</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            html += '</div>';
+            grid.innerHTML = html;
+
+            // Attach event delegation for Add buttons
+            var container = document.getElementById('productGridContainer');
+            if (container) {
+                container.addEventListener('click', function(e) {
+                    var btn = e.target.closest('.add-to-cart-btn');
+                    if (!btn) return;
+                    var card = btn.closest('.product-card');
+                    if (!card) return;
+                    var id = parseInt(card.getAttribute('data-product-id'));
+                    var name = decodeURIComponent(card.getAttribute('data-product-name'));
+                    var price = parseFloat(card.getAttribute('data-product-price'));
+                    var stock = parseInt(card.getAttribute('data-product-stock'));
+                    var qtyInput = card.querySelector('.qty-input');
+                    var qty = qtyInput ? parseInt(qtyInput.value) : 1;
+                    addToCart(id, name, price, stock, qty);
+                });
+            }
+        }
+
+        async function loadMyOrders() {
+            var orders = await apiCall('/orders/me');
+            renderTable('ordersTable', orders, [
+                { key: 'id', label: 'Order #' },
+                { key: 'order_total', label: 'Total', format: function(v) { return '$' + v.toFixed(2); } },
+                { key: 'status', label: 'Status', badge: true },
+                { key: 'created_at', label: 'Date', format: function(v) { return new Date(v).toLocaleDateString(); } }
+            ]);
+        }
+
+        function loadCart() {
+            var container = document.getElementById('cartItems');
+            if (!cart.length) { container.innerHTML = '<div class="empty">Your cart is empty</div>'; updateCartTotal(); return; }
+
+            var html = '';
+            for (var i = 0; i < cart.length; i++) {
+                var item = cart[i];
+                html += '<div class="cart-item">' +
+                    '<div>' +
+                        '<div style="font-weight:600;">' + item.name + '</div>' +
+                        '<div style="font-size:12px;color:#718096;">$' + item.price.toFixed(2) + ' x ' + item.qty + '</div>' +
+                    '</div>' +
+                    '<div style="display:flex;align-items:center;gap:12px;">' +
+                        '<div style="font-weight:700;">$' + (item.price * item.qty).toFixed(2) + '</div>' +
+                        '<button class="btn btn-danger btn-sm remove-cart-btn" data-cart-index="' + i + '">Remove</button>' +
+                    '</div>' +
+                '</div>';
+            }
+            container.innerHTML = html;
+            updateCartTotal();
+        }
+
+        function addToCart(id, name, price, maxStock, qty) {
+            qty = qty || 1;
+            if (qty < 1 || qty > maxStock) { showToast('Invalid quantity', 'error'); return; }
+
+            var existing = null;
+            for (var i = 0; i < cart.length; i++) {
+                if (cart[i].id === id) { existing = cart[i]; break; }
+            }
+            if (existing) {
+                if (existing.qty + qty > maxStock) { showToast('Not enough stock', 'error'); return; }
+                existing.qty += qty;
+            } else {
+                cart.push({ id: id, name: name, price: price, qty: qty });
+            }
+            updateCartStats();
+            showToast(qty + 'x ' + name + ' added to cart');
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartStats();
+            if (!document.getElementById('cart').classList.contains('hidden')) loadCart();
+        }
+
+        function updateCartStats() {
+            var total = 0, count = 0;
+            for (var i = 0; i < cart.length; i++) {
+                total += cart[i].price * cart[i].qty;
+                count += cart[i].qty;
+            }
+            document.getElementById('statCartItems').textContent = count;
+            document.getElementById('statCartTotal').textContent = '$' + total.toFixed(2);
+            var badge = document.getElementById('cartBadge');
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'inline' : 'none';
+        }
+
+        function updateCartTotal() {
+            var total = 0;
+            for (var i = 0; i < cart.length; i++) total += cart[i].price * cart[i].qty;
+            document.getElementById('cartTotal').textContent = '$' + total.toFixed(2);
+        }
+
+        async function placeOrder() {
+            if (!cart.length) { showToast('Cart is empty', 'error'); return; }
+            var items = [];
+            for (var i = 0; i < cart.length; i++) {
+                items.push({ item_id: cart[i].id, quantity: cart[i].qty });
+            }
+            var body = { status: 'pending', cart_items: items };
+            await apiCall('/order', 'POST', body);
+            cart = [];
+            updateCartStats();
+            showToast('Order placed successfully!');
+            switchSection('orders');
+            loadMyOrders();
+        }
+    </script>
+</body>
+</html>

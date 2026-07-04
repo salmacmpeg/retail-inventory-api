@@ -1,0 +1,18 @@
+[project]
+name = "retailapp"
+version = "0.1.0"
+description = "A FastAPI application for managing retail inventory."
+authors = [{ name = "Salma AbdelMonem AbdelMotaleb", email = "your@email.com" }]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F"] 
+
+[tool.black]
+line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+asyncio_mode = "auto"
