@@ -4,6 +4,9 @@ This project is a small retail inventory system built around FastAPI. It helps a
 
 It is not a large enterprise platform. It is a practical backend with a lightweight frontend, aimed at showing how a real retail workflow can be organized in a clean and testable way.
 
+## life URL: 
+retail-inventory-api-production.up.railway.app
+
 ## What the system does
 
 The app lets you:
