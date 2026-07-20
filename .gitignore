@@ -14,3 +14,5 @@ retailapp.egg-info/
 PricerMlModel/reports/
 RetailApp/db
 RetailApp/seed_data.py
+aws.md
+next steps.md
